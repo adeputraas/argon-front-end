@@ -4,19 +4,21 @@ import Sidebar from '../components/Sidebar/index';
 
 const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isUserLoggedin, setUserLoggedIn] = useState(localStorage.getItem("user"));
 
   return (
     <div className="dark:bg-boxdark-2 dark:text-bodydark">
       {/* <!-- ===== Page Wrapper Start ===== --> */}
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Start ===== --> */}
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        {isUserLoggedin ? <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} /> : null}
+        
         {/* <!-- ===== Sidebar End ===== --> */}
 
         {/* <!-- ===== Content Area Start ===== --> */}
         <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
           {/* <!-- ===== Header Start ===== --> */}
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          {isUserLoggedin ? <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} /> : null}
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Start ===== --> */}

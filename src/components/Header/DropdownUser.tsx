@@ -1,16 +1,56 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import API from '../../api';
+import { useAppContext } from '../../AppContext';
 
 import UserOne from '../../images/user/user-01.png';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+
+interface User { 
+  username: string;
+  role: string;
+  idUser: string;
+  email: string;
+  photo: string;
+}
+
+const detailUserString = localStorage.getItem('user') || "";
 
 const DropdownUser = () => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  const { globalState, setGlobalState } = useAppContext();
+  const {isProfileUpdate } = globalState;
+
+  const [userDetail, setUserDetail] = useState<User>(JSON.parse(detailUserString));
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
 
+  const retrieveGetUserDetail = async () => {
+    const respRetrieveUser = await API.get('USERS', `retrieve-detail-user/${userDetail.idUser}`);
+    if(respRetrieveUser.status === "Bad Request") {
+      toast.error(respRetrieveUser.message, {
+        position: "top-right"
+      });
+    } else {
+      const objAssign = {
+        username: respRetrieveUser.data[0].username,
+        role: respRetrieveUser.data[0].role,
+        idUser: respRetrieveUser.data[0].id,
+        email: respRetrieveUser.data[0].email,
+        photo: respRetrieveUser.data[0].photo,
+      }
+      setUserDetail(objAssign);
+    }
+  }
+
   // close on click outside
   useEffect(() => {
+
+    retrieveGetUserDetail();
+
     const clickHandler = ({ target }: MouseEvent) => {
       if (!dropdown.current) return;
       if (
@@ -23,7 +63,7 @@ const DropdownUser = () => {
     };
     document.addEventListener('click', clickHandler);
     return () => document.removeEventListener('click', clickHandler);
-  });
+  }, [globalState]);
 
   // close if the esc key is pressed
   useEffect(() => {
@@ -35,6 +75,11 @@ const DropdownUser = () => {
     return () => document.removeEventListener('keydown', keyHandler);
   });
 
+  const userLoggedOutFunc = () => {
+    localStorage.clear();
+    navigate('/auth/signin');
+  };
+
   return (
     <div className="relative">
       <Link
@@ -45,13 +90,13 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            Thomas Anree
+            {userDetail.username}
           </span>
-          <span className="block text-xs">UX Designer</span>
+          <span className="block text-xs">{userDetail.role}</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
-          <img src={UserOne} alt="User" />
+          <img src={userDetail.photo ? `http://localhost:3030/uploads/${userDetail.photo}` : UserOne} alt="User" />
         </span>
 
         <svg
@@ -81,7 +126,7 @@ const DropdownUser = () => {
         }`}
       >
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
-          <li>
+          {/* <li>
             <Link
               to="/profile"
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
@@ -126,10 +171,18 @@ const DropdownUser = () => {
               </svg>
               My Contacts
             </Link>
-          </li>
+          </li> */}
+          {/* <li>
+            <button
+              className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+            >
+              <AiFillClockCircle />
+              Clocked In
+            </button>
+          </li> */}
           <li>
             <Link
-              to="/pages/settings"
+              to="/settings"
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
             >
               <svg
@@ -153,7 +206,10 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        <button
+          className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+          onClick={userLoggedOutFunc}
+        >
           <svg
             className="fill-current"
             width="22"
